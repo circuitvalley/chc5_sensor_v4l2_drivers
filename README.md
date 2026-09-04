@@ -11,7 +11,7 @@ overlay, a DKMS package and a per-sensor README with the detail for that part.
 | Sensor | Resolution | Link frequency | Lanes | Boards |
 | ------ | ---------- | -------------- | ----- | ------ |
 | [imx283](imx283/README.md)   | 5472 x 3648 | 360 - 720 MHz (720 - 1440 Mbps/lane) | 4 | Pi 5, CM4, CM5 |
-| [imx294](imx294/README.md)   | 4176 x 2824 | 480 - 600 MHz (960 - 1200 Mbps/lane) | 4 | Pi 5, CM4, CM5 |
+| [imx294](imx294/README.md)   | 4176 x 2824 | 480 - 600 MHz (960 - 1728 Mbps/lane) | 4 | Pi 5, CM4, CM5 |
 | [imx477](imx477/README.md)   | 4056 x 3040 | 450 - 624 MHz (900 - 1248 Mbps/lane) | 2 or 4 | all |
 | [imx565](imx565/README.md)   | 4128 x 3008 | 297 - 594 MHz (594 - 1188 Mbps/lane) | 2 or 4 | all |
 | [imx568](imx568/README.md)   | 2472 x 2064 | 297 - 594 MHz (594 - 1188 Mbps/lane) | 2 or 4 | all |
