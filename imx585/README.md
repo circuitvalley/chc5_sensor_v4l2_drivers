@@ -47,7 +47,6 @@ connector you plugged into.
 | `mono` | Monochrome variant: advertise Y10/Y12 instead of Bayer |
 | `rotation` | 0 or 180 |
 | `orientation` | 0 = front, 1 = back, 2 = external |
-| `media-controller` | Expose the full media graph (default on) |
 | `link-frequency` | CSI-2 link frequency in Hz, see below |
 | `clock-frequency` | INCK/XCLK frequency in Hz fitted on the module |
 
