@@ -125,12 +125,3 @@ repository README for what to install and what it replaces.
 Tuning for this sensor exists upstream in libcamera for both RP1 and
 unicam, but has never been exercised here because the module does not probe.
 
-## Status and known gaps
-
-**This sensor does not currently work on a Raspberry Pi.** The module never
-acknowledges on I2C on the Pi connector: both camera buses read back empty with
-the regulator on, after reseating the flex twice and a fresh boot. It is
-suspected the board needs a host-supplied clock or a driven reset that the Pi
-connector does not provide. This is an open hardware question, not a driver
-fault, and the rest of this page is untested as a result.
-
