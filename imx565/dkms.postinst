@@ -1,5 +1,12 @@
 #!/bin/sh
+# DKMS post-install hook: compile the overlay and put it where the firmware
+# reads it (/boot/firmware/overlays on Bookworm and later, /boot/overlays on
+# older images).  ../setup.sh verifies the result.
 
-dtc -Wno-interrupts_property -Wno-unit_address_vs_reg -@ -I dts -O dtb -o imx565.dtbo imx565-overlay.dts
+dtc -Wno-interrupts_property -Wno-unit_address_vs_reg -@ -I dts -O dtb -o imx565.dtbo imx565-overlay.dts || exit 1
 
-install -m 751 imx565.dtbo /boot/overlays/
+for d in /boot/firmware/overlays /boot/overlays; do
+	[ -d "$d" ] && exec install -m 644 imx565.dtbo "$d/"
+done
+echo "no overlays directory under /boot/firmware or /boot" >&2
+exit 1

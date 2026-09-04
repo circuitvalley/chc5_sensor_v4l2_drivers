@@ -49,35 +49,55 @@ later, so there are no per-kernel branches.
 
 ## Installing the driver
 
-Install the build dependencies, then run the setup script for the sensor you
-have. `--all` installs every driver, which is useful if you swap modules.
+One command installs the build dependencies, the DKMS module, the overlay and
+the config.txt entry:
 
 ```bash
-sudo apt install linux-headers-$(uname -r) dkms device-tree-compiler git
 git clone https://github.com/circuitvalley/chc5_sensor_v4l2_drivers
 cd chc5_sensor_v4l2_drivers
-./setup.sh imx585          # or ./setup.sh --all
+sudo ./setup.sh imx585           # Pi 5: connector cam0; add --cam1 for the other one
+sudo reboot
+sudo ./setup.sh --check imx585   # after the reboot
 ```
 
-Add the overlay to `/boot/firmware/config.txt`, turning off camera
-autodetection so it does not fight the overlay:
+Options: `--cam0` / `--cam1` pick the connector, `--mono` selects the
+monochrome imx585 or imx678, `--2lane` is added automatically on a Pi 4,
+`--link-frequency HZ` picks another rate from the sensor's table, and
+`--option NAME[=VALUE]` passes any other overlay parameter, for example
+`--option rotation=180`. `sudo ./setup.sh --help` lists them all.
+
+The script runs `apt-get` for `dkms`, `device-tree-compiler`,
+`build-essential` and the kernel headers package that tracks kernel upgrades,
+so DKMS can rebuild the module after the next `apt full-upgrade`. On a machine
+without internet access install those yourself and pass `--no-deps`.
+
+What it writes to `/boot/firmware/config.txt` is one managed block:
 
 ```
+# >>> circuitvalley sensor >>>
+[all]
 camera_auto_detect=0
 dtoverlay=imx585,cam0,always-on
+# <<< circuitvalley sensor <<<
 ```
 
-Reboot. Each sensor's README lists the overlay options for that part, including
-its link frequencies and any options only it has.
+Re-running replaces that block and touches nothing else. The stock
+`camera_auto_detect=1` line is commented out, since autodetection fights the
+overlay, and `--uninstall` puts it back. `always-on` is currently needed on
+every module: without it the camera regulator stays off and the I2C bus reads
+back empty. For imx294 the script also sets `link-frequency=600000000`,
+because the RP1 receiver on a Pi 5 receives nothing at the sensor's 480 MHz
+default.
 
-Two notes that apply to every module:
-
-- `always-on` is currently needed on all of them. Without it the camera
-  regulator stays off and the I2C bus reads back empty.
-- Use `cam0` or `cam1` explicitly to match the connector you plugged into.
+`sudo ./setup.sh --all` installs every module without a config.txt entry,
+useful if you swap sensors; then pick one with
+`sudo ./setup.sh <sensor> --config-only`. `<sensor>/setup.sh` on its own
+installs just the module, for people who manage config.txt themselves; the
+per-sensor READMEs describe that path and the overlay parameters.
 
 For imx477 and imx283 the kernel already ships a driver of the same name.
-`setup.sh` forces the DKMS install over it, but confirm the right module won:
+`setup.sh` forces the DKMS install over it and checks that the right module
+won; you can confirm it yourself:
 
 ```bash
 modinfo imx477 | grep filename        # must resolve under updates/dkms/
