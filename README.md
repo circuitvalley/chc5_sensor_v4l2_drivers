@@ -138,16 +138,3 @@ The tuning files are complete for RP1, which covers the Pi 5 and CM5. For the Pi
 4 and CM4 the fork carries tuning only for imx283 and imx477, so on those boards
 the other six sensors are raw V4L2 only for now.
 
-## Status
-
-Bring-up was done on a Raspberry Pi 5. Seven of the eight sensors stream through
-both V4L2 and libcamera, with autogain, manual exposure and colour calibration
-working. Each sensor's README records what was tested for that part, the limits
-found and the workarounds still needed.
-
-The one exception is the **imx283**, whose module never answers on I2C on the Pi
-connector. That is being tracked as a hardware question, not a driver one.
-
-Nothing here has been tested on a Pi 4 or CM4 yet. The drivers build for those
-boards and the overlays are written for them, but no module has been run on a
-unicam receiver.
