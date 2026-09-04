@@ -116,32 +116,79 @@ v4l2-ctl --list-devices
 
 ## libcamera and rpicam-apps
 
-**Raw capture through V4L2 works with stock Raspberry Pi OS.** `v4l2-ctl`,
-`media-ctl` and GStreamer's `v4l2src` need nothing beyond the driver. If all you
-want is raw frames, stop here.
-
-**`rpicam-hello`, `rpicam-vid`, `rpicam-still` and Picamera2 need our libcamera
-fork.** Raspberry Pi's libcamera refuses any sensor it has no CamHelper for, and
-upstream has none for the imx294, imx565, imx568, imx585, imx678 or ox08b40.
-Even imx477, which upstream does know, needs the fork: every driver here reports
-analogue gain in tenths of a dB rather than raw register codes, so an unpatched
-helper drives the gain wrongly. It either pins the AGC at maximum or lands about
-three times off, depending on the sensor.
-
-The fork adds eight CamHelpers and the tuning files, on top of Raspberry Pi's
-own libcamera:
+The drivers alone give you raw V4L2 capture. Everything that goes through
+libcamera needs the CircuitValley libcamera fork, because Raspberry Pi's
+libcamera refuses any sensor it has no CamHelper for, and even for the two it
+knows it applies the wrong gain law to these drivers.
 
     https://github.com/circuitvalley/libcamera-circuitvalley
 
-Build it together with rpicam-apps, following Raspberry Pi's own build
-instructions and substituting this repository for theirs. Prebuilt `.deb`
-packages are planned so that this compile is not needed.
+### What works with and without it
 
-### What the fork replaces
+| | Stock Raspberry Pi OS | With the fork |
+| --- | --- | --- |
+| Raw capture over V4L2: `v4l2-ctl`, `media-ctl`, GStreamer `v4l2src`, `tools/pi_capture` | works, all eight sensors | works |
+| Sensor controls over V4L2: exposure, gain, blanking, link frequency | works | works |
+| `rpicam-hello`, `rpicam-vid`, `rpicam-still` | imx294, imx565, imx568, imx585, imx678, ox08b40: `No cameras available!` imx477: runs, but the gain is wrong, AGC pinned at maximum or about three times off. imx283: the same by construction, not observed, since that module has not yet probed on a Pi | all eight, with auto exposure, auto white balance and the measured colour matrices |
+| Picamera2 | same as rpicam-apps | all eight through the fork's Python bindings, not yet verified on the bench |
+| GStreamer `libcamerasrc` | same as rpicam-apps | works, built with `-Dgstreamer=enabled` |
+| Mode list in libcamera | | one size per sensor for imx565, imx568, imx585 and imx678, since the drivers advertise a continuous range; V4L2 is not limited |
 
-The fork is Raspberry Pi's libcamera with two commits on top, and it installs
-under `/usr/local`, so the distribution packages stay on disk. At runtime,
-though, it takes precedence, and that changes two things for imx477:
+On a fresh Raspberry Pi OS Trixie image with the imx568 installed, `rpicam-hello
+--list-cameras` prints `No cameras available!` while `v4l2-ctl` streams full
+frames. That is the expected stock behaviour, not a driver fault.
+
+### What the fork contains
+
+Raspberry Pi's own libcamera (v0.7.2+rpt20260817) plus two commits: eight
+CamHelpers that speak the drivers' gain unit, tenths of a dB, and tuning files
+for imx294, imx565, imx568, imx585, imx678 and ox08b40 with colour measured
+against a ColorChecker under three lamps. imx477 and imx283 keep Raspberry Pi's
+tuning files; only the gain functions of their helpers are patched. The tuning
+files carry placeholder noise, lens-shading and lux models.
+
+### Installing the fork
+
+Build both libcamera and rpicam-apps from source, following Raspberry Pi's
+documentation with this repository in place of theirs. Both are needed: the
+fork is libcamera 0.7.2, and the rpicam-apps package in the distribution is
+built against the distribution's 0.7.1. On a Raspberry Pi 5 the two builds take
+about 12 and 6 minutes; the Pi needs internet access for the build dependencies.
+
+```bash
+sudo apt install -y git python3-pip python3-jinja2 python3-yaml python3-ply \
+    libboost-dev libgnutls28-dev openssl libtiff-dev pybind11-dev \
+    qtbase5-dev libqt5core5a libqt5widgets5 meson cmake ninja-build \
+    libglib2.0-dev libgstreamer-plugins-base1.0-dev
+git clone https://github.com/circuitvalley/libcamera-circuitvalley.git
+cd libcamera-circuitvalley
+meson setup build --buildtype=release -Dgstreamer=enabled -Dpycamera=enabled
+sudo ninja -C build install
+sudo ldconfig
+```
+
+Then rpicam-apps, at the version the bench validated against the fork:
+
+```bash
+git clone --branch v1.12.0 https://github.com/raspberrypi/rpicam-apps.git
+cd rpicam-apps
+meson setup build
+meson compile -C build
+sudo meson install -C build
+sudo ldconfig
+rpicam-hello --list-cameras
+```
+
+Raspberry Pi's page lists the rpicam-apps build dependencies and the meson
+options for the preview and encoder back ends:
+https://www.raspberrypi.com/documentation/computers/camera_software.html
+
+Both install under `/usr/local`, so the distribution packages stay on disk and
+`apt` keeps working, but at runtime the fork takes precedence. To go back to
+the stock stack, run `sudo ninja -C build uninstall` in both build directories
+and `sudo ldconfig`.
+
+### What the fork changes for other cameras
 
 - The imx477 CamHelper is patched, so **a genuine Raspberry Pi HQ Camera on the
   same system is also driven by the patched gain law.** The existing imx477
