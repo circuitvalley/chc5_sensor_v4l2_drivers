@@ -17,6 +17,11 @@
 #
 set -u
 
+# dkms and modinfo live in /usr/sbin.  A non-interactive ssh shell for a normal
+# user does not have that on PATH on Debian, so --check (which runs them without
+# sudo) would wrongly report the module missing.  Put the admin dirs on PATH.
+case ":$PATH:" in *:/usr/sbin:*) ;; *) PATH="/usr/sbin:/sbin:$PATH"; export PATH ;; esac
+
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 VERSION=0.0.1                  # PACKAGE_VERSION in every dkms.conf
 BEGIN='# >>> circuitvalley sensor >>>'
