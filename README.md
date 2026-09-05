@@ -129,7 +129,7 @@ knows it applies the wrong gain law to these drivers.
 | --- | --- | --- |
 | Raw capture over V4L2: `v4l2-ctl`, `media-ctl`, GStreamer `v4l2src`, `tools/pi_capture` | works, all eight sensors | works |
 | Sensor controls over V4L2: exposure, gain, blanking, link frequency | works | works |
-| `rpicam-hello`, `rpicam-vid`, `rpicam-still` | imx294, imx565, imx568, imx585, imx678, ox08b40: `No cameras available!` imx477: runs, but the gain is wrong, AGC pinned at maximum or about three times off. imx283: the same by construction, not observed, since that module has not yet probed on a Pi | all eight, with auto exposure, auto white balance and the measured colour matrices |
+| `rpicam-hello`, `rpicam-vid`, `rpicam-still` | imx294, imx565, imx568, imx585, imx678, ox08b40: `No cameras available!` imx477: runs, but the gain is wrong, AGC pinned at maximum or about three times off | all eight, with auto exposure, auto white balance and the measured colour matrices |
 | Picamera2 | same as rpicam-apps | all eight through the fork's Python bindings, not yet verified on the bench |
 | GStreamer `libcamerasrc` | same as rpicam-apps | works, built with `-Dgstreamer=enabled` |
 | Mode list in libcamera | | one size per sensor for imx565, imx568, imx585 and imx678, since the drivers advertise a continuous range; V4L2 is not limited |
